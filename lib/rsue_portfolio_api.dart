@@ -9,6 +9,7 @@ const academicPerformanceURL =
 const loginURL = 'https://portfolio.rsue.ru/login/index.php';
 const reportURL = 'https://portfolio.rsue.ru/portfolio/index.php?view=1';
 const whoamiURL = 'https://portfolio.rsue.ru/portfolio/index.php?section=11';
+const accountingURL = 'https://portfolio.rsue.ru/accounting/index.php';
 
 bool? _checkAuthByDataRaw(String data) {
   if (data.contains(
@@ -152,6 +153,41 @@ Map? _academicPerformanceParser(String raw) {
   return result;
 }
 
+Map? _accountingParser(String raw) {
+  List<Element> body = parse(raw).getElementById('body')!.children[1].children;
+
+  Map? result = {};
+
+  String? nameOfColumn;
+  List column = [];
+  for (var element in body) {
+    if (element.localName == "h4") {
+      if (nameOfColumn == null) {
+        nameOfColumn = element.text;
+      } else {
+        result[nameOfColumn] = column;
+        nameOfColumn = element.text;
+        column = [];
+      }
+    } else if (element.localName == "a") {
+      String? link = element.attributes['href'];
+      if (link != null) {
+        link = "https://portfolio.rsue.ru" + link;
+      }
+      var dates = RegExp(r'([1234567890.]+)').allMatches(element.text).toList();
+      column.add({
+        "start": dates[0][1],
+        "end": dates[1][1],
+        "created": dates[2][1],
+        "link": link
+      });
+    }
+  }
+  result[nameOfColumn] = column;
+  return result;
+}
+
+/// Парсит успеваемость
 Future<Map?> academicPerformance(
     {required String username, required String password}) async {
   var academicPerformance = await _getRaw(academicPerformanceURL,
@@ -163,11 +199,24 @@ Future<Map?> academicPerformance(
   return null;
 }
 
+/// Парсит основную информацию о пользователе
 Future<Map?> whoami(
     {required String username, required String password}) async {
   var whoami = await _getRaw(whoamiURL, username: username, password: password);
   if (whoami != null) {
     var a = _whoamiParser(whoami);
+    return a;
+  }
+  return null;
+}
+
+/// Парсит квитанции на оплату общежития
+Future<Map?> accounting(
+    {required String username, required String password}) async {
+  var raw =
+      await _getRaw(accountingURL, username: username, password: password);
+  if (raw != null) {
+    var a = _accountingParser(raw);
     return a;
   }
   return null;

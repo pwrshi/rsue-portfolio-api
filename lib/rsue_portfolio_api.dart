@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/adapter.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:dio/dio.dart';
@@ -28,6 +31,16 @@ Future<String?> _getRaw(String url,
   try {
     // set up cookie storage
     var dio = Dio();
+
+    // Игнорирует всратый сертификат
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (HttpClient client) {
+      // коллбэчит что всё ок
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+      return client;
+    };
+
     var cookieJar = CookieJar();
     dio.interceptors.add(CookieManager(cookieJar));
 

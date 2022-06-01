@@ -106,6 +106,9 @@ class SubjectPerfomance {
     } else if (text.contains(" (Зачет)")) {
       name = text.replaceAll(" (Зачет)", "");
       type = "Зачет";
+    } else if (text.contains(" (Практика)")) {
+      name = text.replaceAll(" (Практика)", "");
+      type = "Практика";
     } else {
       name = text;
       type = "";
